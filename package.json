@@ -4,8 +4,11 @@
   "description": "shopping list",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron ."
   },
   "author": "Maria Ahokas",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^13.1.7"
+  }
 }
