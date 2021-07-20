@@ -5,8 +5,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shoppinglist</title>
+    <ul></ul>
   </head>
   <body>
     <h1>Shoppinglist</h1>
+    <script>
+      const { ipcRenderer } = require("electron");
+      const ul = document.querySelector("ul");
+
+      ipcRenderer.on("item:add", function (e, item) {
+        const li = document.createElement("li");
+        const itemText = document.createTextNode(item);
+        li.appendChild(itemText);
+        ul.appendChild(li);
+      });
+
+      ipcRenderer.on("item:clear", function () {
+        ul.innerHTML = "";
+      });
+    </script>
   </body>
 </html>

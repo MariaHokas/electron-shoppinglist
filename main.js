@@ -1,19 +1,9 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, Menu } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain } = require("electron");
 const { MenuItem } = require("electron/main");
 const path = require("path");
 
-if (process.env.NODE_ENV === "development") {
-  require("electron-watch")(
-    __dirname,
-    "dev:electron-main", // npm scripts, means: npm run dev:electron-main
-    path.join(__dirname, "./"), // cwd
-    2000 // debounce delay
-  );
-}
-
 function createWindow() {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 600,
     height: 600,
@@ -28,29 +18,20 @@ function createWindow() {
   const mainMenu = Menu.buildFromTemplate(mainMunTemplate);
 
   Menu.setApplicationMenu(mainMenu);
-
-  // and load the index.html of the app.
   mainWindow.loadFile("mainWindow.html");
-
-  // Open the DevTools.
   mainWindow.webContents.openDevTools();
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow();
 
   app.on("activate", function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 function createAddWindow() {
-  const addWindow = new BrowserWindow({
+  let addWindow = new BrowserWindow({
     width: 300,
     height: 200,
     title: "add window",
@@ -59,8 +40,18 @@ function createAddWindow() {
     },
   });
 
+  addWindow.on("closed", function () {
+    addWindow = null;
+  });
+
   addWindow.loadFile("addWindow.html");
 }
+
+ipcMain.on("item:add", function (e, item) {
+  console.log(item);
+  mainWindow.webContents.send("item:add", item);
+  addWindow.close();
+});
 
 const mainMunTemplate = [
   {
@@ -74,6 +65,9 @@ const mainMunTemplate = [
       },
       {
         label: "clear item",
+        click() {
+          mainWindow.webContents.send("items-clear", item);
+        },
       },
       {
         label: "Quit",
@@ -82,16 +76,17 @@ const mainMunTemplate = [
           app.quit();
         },
       },
+      {
+        role: "reload",
+      },
     ],
   },
 ];
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+if (process.platform == "darwin") {
+  mainMunTemplate.unshift({});
+}
+
 app.on("window-all-closed", function () {
   if (process.platform !== "darwin") app.quit();
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
